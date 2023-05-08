@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head ">
+<head>
 <script language="javascript">
         function search_service() {
                 let input = document.getElementById('searchbar').value;
@@ -14,10 +14,10 @@
 	<title>MyHome - Login</title>
 	<script language="javascript">
 		function SelectRedirectUser(){
-			window.location.href = "../MyHome/login";
+			window.location.href = "../login";
 		}
 		function SelectRedirectVend(){
-			//window.location.href = "../MyHome/loginVend.php";
+			window.location.href = "../loginVend";
 		}
 	</script>
 	<meta charset="utf-8">
@@ -50,45 +50,19 @@ border-color:black;
 border-width: 3px;
 }
 </style>
-<body style="margin-top: 12px; background-image: url('wood.jpeg');">
+<body style="margin-top: 12px; background-image:url({{url('images/wood.jpeg')}})">
 
 <div class="container-fluid">
-	<nav class="navbar navbar-expand-lg navbar-light bg-light" style="border-radius:15px; padding: 15px 10px; border-style: solid; border-color: black">
-  		<div class="container-fluid">
-    		<a class="navbar-brand" href='index.html'>MyHome</a>
-    			<div class="collapse navbar-collapse" id="navbarText">
-      				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        				<li class="nav-item">
-        					<a class="nav-link" aria-current="page" href='index.html'>Home</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link active" href='login.php'>Login</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='signup.php'>Sign Up</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='update.php'>Update Information</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='vendorSignup.php'>Vendor Registration</a>
-        				</li>
-      				</ul>
-				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					<li class="nav-item">
-        					<a class="nav-link" href='userHub.php'>User Hub</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='vendorHub.php'>Vendor Hub</a>
-        				</li>
-				</ul>
-      				<form class="d-flex">
-      					<input class="form-control me-2" style = "border-width:1px;" type="search" placeholder="Search" aria-label="Search">
-						<button class="btn btn-outline-success" style="border-color: #8c5020; color: #8c5020;" onclick="search_service()" name="search">Search</button>
-    				</form>
-    			</div>
-  		</div>
-		</nav>
+<?php 
+if (session()->missing('firstname'))
+{
+	include(app_path().'/includes/headerLoggedOut.php');
+}
+else
+{
+	include(app_path().'/includes/headerLoggedIn.php');
+}
+    ?>
 		<div class = "container-fluid" style="padding:10px 15px;">
 		<div class = "row" style="">
 			<div class = "col" style="margin-top: 70px; margin-left:125px;">
@@ -102,6 +76,14 @@ border-width: 3px;
   			</div>
 			</div>
 			<div class = "col" style = "margin-right:125px;">
+			@if(Session::has('success'))
+                                <div class="alert alert-success">
+                                    {{ Session::get('success') }}
+                                    @php
+                                        Session::forget('success');
+                                    @endphp
+                                </div>
+                            @endif
 		 	<form class="form" action="{{ route('login.post') }}" method="POST" name="login">
 			@csrf
         		<h1 class="login-title" style="color:black;">User Login</h1><br>
@@ -109,7 +91,10 @@ border-width: 3px;
 			<input type="text" style="padding: 5px; border-style:solid;" name="lastname" placeholder="Last Name" autofocus="true"/><br><br>
         		<input type="password" style="padding: 5px; border-style:solid;" name="password" placeholder="Password"/><br><br>
         		<input type="submit" style="padding: 5px 10px; color: white; background-color:#8c5020; border-radius:10px; border-style:solid; border-color:black;" value="Login" name="submit" class="login-button"/><br><br>
-			</div>
+				<label>
+                            <a style="color:#8c5020;" href="{{ route('forget.password.get') }}">Reset Password</a>
+                        </label>
+				</div>
 		</div>
 		</div>
 </body>

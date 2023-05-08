@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head ">
+<head>
 	<title>MyHome - Sign Up</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,48 +24,22 @@ input[type=password]:focus {
     border-style: solid; 
     border-radius: 15px; 
     border-color: black;
+}
 </style>
-<body style="margin-top: 12px; background-image: url('wood.jpeg');">
+<body style="margin-top: 12px; background-image:url({{url('images/wood.jpeg')}})">
 
 <div class="container-fluid">
-	<nav class="navbar navbar-expand-lg navbar-light bg-light" style="border-radius:15px; padding: 15px 10px; border-style: solid; border-color: black">
-  		<div class="container-fluid">
-    		<a class="navbar-brand" href='index.html'>MyHome</a>
-    			<div class="collapse navbar-collapse" id="navbarText">
-      				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        				<li class="nav-item">
-        					<a class="nav-link" aria-current="page" href='index.html'>Home</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='login.php'>Login</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link active" href='signup.php'>Sign Up</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='update.php'>Update Information</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='vendorSignup.php'>Vendor Registration</a>
-        				</li>
-      				</ul>
-				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					<li class="nav-item">
-        					<a class="nav-link" href='userHub.php'>User Hub</a>
-        				</li>
-					<li class="nav-item">
-        					<a class="nav-link" href='vendorHub.php'>Vendor Hub</a>
-        				</li>
-				</ul>
-      				<form class="d-flex">
-      					<input class="form-control me-2" style = "border-width:1px;" type="search" placeholder="Search" aria-label="Search">
-      					<button class="btn btn-outline-success" style="border-color: #8c5020; color: #8c5020;" type="submit">Search</button>
-    				</form>
-    			</div>
-  		</div>
-		</nav>
+<?php include(app_path().'/includes/headerLoggedOut.php');?>
 		<div class = "container-fluid" style="padding:0px 0px;">
 		<div class = "row" style="">
+		@if(Session::has('success'))
+        <div class="alert alert-success">
+        {{ Session::get('success') }}
+        @php
+        Session::forget('success');
+        @endphp
+        </div>
+        @endif
 		 	<form class="form" action="{{ route('register.post') }}" method="POST">
 			@csrf
         		<h1 class="login-title" style="color:black;">Create an Account</h1>

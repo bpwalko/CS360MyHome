@@ -21,6 +21,7 @@ class AuthController extends Controller
         return view('auth.login');
     }  
       
+
     /**
      * Write code on Method
      *
@@ -40,17 +41,18 @@ class AuthController extends Controller
     {
         $request->validate([
             'firstname' => 'required',
-	    'lastname' => 'required',
+	        'lastname' => 'required',
             'password' => 'required',
         ]);
-   
+
         $credentials = $request->only('firstname', 'lastname', 'password');
+        $request->session()->put('firstname', $credentials['firstname']);
         if (Auth::attempt($credentials)) {
-            return redirect()->intended('index')
-                        ->withSuccess('You have Successfully loggedin');
+            return redirect()->intended('update')
+                        ->withSuccess('You have Successfully logged in');
         }
   
-        return redirect("registration")->withSuccess('Your credentials were incorrect');
+        return redirect("login")->withSuccess('Your credentials were incorrect');
     }
       
     /**
@@ -65,13 +67,15 @@ class AuthController extends Controller
 	    'lastname' => 'required',
             'email' => 'required|email|unique:users',
 	    'phoneNum' => 'required',
-            'password' => 'required|min:6',
+            'password' => 'required|min:3',
         ]);
            
         $data = $request->all();
         $check = $this->create($data);
-         
-        return redirect("userHub")->withSuccess('You have Successfully logged in!');
+        $request->session()->put('firstname', $request->firstname); 
+
+
+        return redirect("update")->withSuccess('You have Successfully logged in!');
     }
     
     /**
@@ -79,7 +83,7 @@ class AuthController extends Controller
      *
      * @return response()
      */
-    public function dashboard()
+    public function userHub()
     {
         if(Auth::check()){
             return view('userHub');
@@ -115,4 +119,11 @@ class AuthController extends Controller
   
         return Redirect('login');
     }
+
+    public function firstname()
+    {
+    	return 'firstname';
+    }
+
+
 }
