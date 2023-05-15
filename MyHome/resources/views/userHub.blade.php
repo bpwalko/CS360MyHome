@@ -1,5 +1,5 @@
 <?php
-
+include(app_path().'/includes/queryFunctions.php');
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 //use Session;
@@ -252,6 +252,186 @@ function displayFunctionHI()
   </form> ';
 }
 
+function displayFunctionHOI()
+{
+	$userID = getUserID();
+	$infoColumns = getInfoColumns();
+
+	$floods = getVarFromUser($userID, 'floods');
+	$earthquakes = getVarFromUser($userID, 'earthquakes');
+	$hurricanes = getVarFromUser($userID, 'hurricanes');
+	$liability = getVarFromUser($userID, 'liabilityOnly');
+	$age = getVarFromUser($userID, 'age');
+	$state = getVarFromUser($userID, 'state');
+	$price = getStateModHOI($userID);
+
+	if($floods=='Yes')
+	{
+		$EPriceAdd = .6;
+	}
+	else
+	{
+		$FPriceAdd = 0;
+	}
+
+	if($earthquakes=='Yes')
+	{
+		$EPriceAdd = .8;
+	}
+	else
+	{
+		$EPriceAdd = 0;
+	}
+
+	if($liability == 'Liability')
+	{
+		$priceMod = .6;
+	}
+	else
+	{
+		$priceMod = 1;
+	}
+
+	$price = ($price * $priceMod) + ($price * $EPriceAdd) + ($price * $FPriceAdd);
+
+	$table = getVendType();
+	$serviceColumns = getServiceColumns(getVendType());
+	$max_index = count($serviceColumns);
+
+
+	$type = $serviceColumns[4];
+	$downloadSpeed = $serviceColumns[5];
+	$price2 = $serviceColumns[6];
+	$provider = $serviceColumns[2];
+
+
+
+	echo "<p style = 'font-size: 16px'> Recommended Values: <br>Should include flood insurance: $floods;<br>Should Include Earthquake Insurance: $earthquakes;" . "<br>" . "Coverage: $liability<br>Price <= $$price;</p> <br>";
+	$sqlRec = "SELECT * FROM $table WHERE earthquake = '" . $earthquakes . "' AND price <= '" . $price . "' AND flood='" . $floods . "' AND FullReplace='" . $liability . "'";
+	//echo $sqlRec;
+	$resultRec = DB::select($sqlRec);
+	echo "<table border='2'  margin-left='1px 1px' align=center style='padding-right:20px; border-style:solid; font-size:13px;'>";
+	echo "<p style = 'font-size: 16px'> Plans Matching Recommended Values: </p>";
+	echo "<tr><th style='padding:5px'>ID</th><th style='padding:5px'>Business</th><th style='padding:5px'>Earthquake</th><th style='padding:5px'>Flood</th><th style='padding:5px'>Full Coverage</th><th style='padding:5px'>Price</th></tr>";
+	foreach($resultRec as $row)
+	{
+		echo "<tr>";
+		for ($i=0; $i < $max_index - 1; $i++)
+		{
+			if($i != 3 && $i !=1)
+			{
+				echo "<td>";
+				$temp = $serviceColumns[$i];
+				echo $row->$temp . " ";
+				echo "</td>";
+			}
+		}
+	} 
+
+	//}
+	echo "</table>";
+	echo  '<form name="serviceForm" method="post">';
+	?>
+		@csrf
+	<?php 
+	echo '<label for="serviceIDLabel">Enter Service ID to add:</label><br>
+	<input type="text" id="serviceInput" name="fname"><br>
+	<input type="submit" value="Submit" name="serviceInput">
+  </form> ';
+}
+
+
+function displayFunctionHS()
+{
+	$userID = getUserID();
+	$infoColumns = getInfoColumns();
+	$squareFootage = getVarFromUser($userID, 'squareFootage');
+	$numBedrooms = getVarFromUser($userID, 'numBedrooms');
+	$numBathrooms = getVarFromUser($userID, 'numBathrooms');
+	$needMeals = 'No';
+	$needWindowPolish = 'No';
+	$needLaundry = 'No';
+	$needDeepClean = 'No';
+	$meals = getVarFromUser($userID, 'meals');
+	$windowPolish = getVarFromUser($userID, 'windowPolish');	
+	$laundry = getVarFromUser($userID, 'laundry');
+	$deepClean = getVarFromUser($userID, 'deepClean');
+	$serviceColumns = getServiceColumns(getVendType());
+	$max_index = count($serviceColumns);
+	$priceMod = 1.0;
+	$totalRooms = $numBedrooms + $numBathrooms;
+	$pricePerRoom = 25;
+		if($meals == 'Yes')
+		{
+			$priceMod = $priceMod + 0.75;
+			$needMeals = 'Yes';
+		}
+		if($windowPolish == 'Yes')
+		{
+			$priceMod = $priceMod + 0.5;
+			$needWindowPolish = 'Yes';
+		}
+		if($laundry == 'Yes')
+		{
+			$priceMod = $priceMod + 0.5;
+			$needLaundry = 'Yes';
+		}	
+		if($deepClean == 'Yes')
+		{
+			$priceMod = $priceMod + 1.0;
+			$needDeepClean = 'Yes';
+		}
+		$sugPrice=(($pricePerRoom * $totalRooms * $priceMod));
+
+	$table = getVendType();
+	$serviceColumns = getServiceColumns(getVendType());
+	$max_index = count($serviceColumns);
+
+
+	$willMeals = $serviceColumns[4];
+	$willWindowPolish = $serviceColumns[5];
+	$willLaundry = $serviceColumns[6];
+	$willDeepClean = $serviceColumns[7];
+	$price = $serviceColumns[8];
+	$provider = $serviceColumns[2];
+
+
+
+	echo "<p style = 'font-size: 16px'> Recommended Values Based on Your House Layout: Price <= $".$sugPrice." <br>";
+	
+	//$sqlRec = "SELECT * FROM $table WHERE willMeals = '" . $needMeals ."' AND willWindowPolish = '" . $needWindowPolish ."' AND willLaundry = '" . $needLaundry ."' AND willDeepClean = '" . $needDeepClean ."' AND price <= '" . $sugPrice . "'";
+	$sqlRec = "SELECT * FROM housekeeping WHERE willMeals = 'Yes' AND willWindowPolish = 'Yes' AND willLaundry = 'Yes' AND willDeepClean = 'Yes' AND price <= 563";
+	$resultRec = DB::select($sqlRec);
+	echo "<table border='2'  margin-left='1px 1px' align=center style='padding-right:20px; border-style:solid; font-size:13px;'>";
+	echo "<p style = 'font-size: 16px'> Plans Matching Recommended Values: </p>";
+	echo "<tr><th style='padding:5px'>ID</th><th <th style='padding:5px'>Business</th><th style='padding:5px'>Meals</th><th style='padding:5px'>Window Polish</th><th style='padding:5px'>Laundry</th><th style='padding:5px'>Deep Clean</th></th><th style='padding:5px'>Price</th></th></tr>";
+	foreach($resultRec as $row)
+	{
+		echo "<tr>";
+		for ($i=0; $i < $max_index - 1; $i++)
+		{
+			if($i != 3 && $i !=1)
+			{
+				echo "<td>";
+				$temp = $serviceColumns[$i];
+				echo $row->$temp . " ";
+				echo "</td>";
+			}
+		}
+	}
+	//}
+	echo "</table>";
+
+	echo  '<form name="serviceForm" method="post">';
+	?>
+		@csrf
+	<?php 
+	echo '<label for="serviceIDLabel">Enter Service ID to add:</label><br>
+	<input type="text" id="serviceInput" name="fname"><br>
+	<input type="submit" value="Submit" name="serviceInput">
+  </form> ';
+}
+
 function displayFunctionAI()
 {
 	$userID = getUserID();
@@ -318,177 +498,114 @@ function displayFunctionAI()
   </form> ';
 }
 
-function getVarFromUser($userID, $var)
+function displayFunctionLC()
 {
-	$sqlVar = "SELECT " . $var . " FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
-	{
-		$resultVar = $row->$var;
-	}
-	return $resultVar;
-}
+	$userID = getUserID();
+	$infoColumns = getInfoColumns();
+	$lawnFootage = getVarFromUser($userID, 'lawnFootage');
+	$onlyMowed = getVarFromUser($userID, 'onlyMowed');
+	$needAerate = 'No';
+	$needWeed = 'No';
+	$needCleanPool = 'No';
+	$needPestsGone = 'No';
+	$aerate = getVarFromUser($userID, 'aerate');
+	$weeded = getVarFromUser($userID, 'weeded');	
+	$deadGrass = getVarFromUser($userID, 'deadGrass');
+	$pool = getVarFromUser($userID, 'pool');
+	$pests = getVarFromUser($userID, 'pests');
+	$serviceColumns = getServiceColumns(getVendType());
+	$max_index = count($serviceColumns);
+	$priceMod = 1.0;
 
-function getStateModHI($userID)
-{
-	$sqlVar = "SELECT state FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
+	
+	if ($onlyMowed == 'Yes')
 	{
-		$resultVar = $row->state;
-	}
-	$sqlMod = "SELECT health FROM states WHERE state='" . $resultVar . "'";
-	$resultMod = DB::select($sqlMod);
-	foreach($resultMod as $row)
-	{
-		$healthPrice = $row->health;
-	}
-	return $healthPrice;
-}
-
-function getStateFullAI($userID)
-{
-	$sqlVar = "SELECT state FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
-	{
-		$resultVar = $row->state;
-	}
-	$sqlMod = "SELECT car_full FROM states WHERE state='" . $resultVar . "'";
-	$resultMod = DB::select($sqlMod);
-	foreach($resultMod as $row)
-	{
-		$healthPrice = $row->car_full;
-	}
-	return $healthPrice;
-}
-
-function getStateLiAI($userID)
-{
-	$sqlVar = "SELECT state FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
-	{
-		$resultVar = $row->state;
-	}
-	$sqlMod = "SELECT car_liability FROM states WHERE state='" . $resultVar . "'";
-	$resultMod = DB::select($sqlMod);
-	foreach($resultMod as $row)
-	{
-		$healthPrice = $row->car_liability;
-	}
-	return $healthPrice;
-}
-
-function getAgeModHI($userID)
-{
-	$sqlVar = "SELECT age FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
-	{
-		$resultVar = $row->age;
-	}
-	$sqlAge = "SELECT max(age) FROM age WHERE age<='" . $resultVar . "'";
-	$result = DB::select($sqlAge);
-	foreach($result as $row)
-	{
-		//echo $row . "<br><br>";
-		$age = $row->{'max(age)'};
-	}
-	$sqlMod = "SELECT healthMod FROM age WHERE age='" . $age . "'";
-	$resultMod = DB::select($sqlMod);
-	foreach($resultMod as $row)
-	{
-		$healthMod = $row->healthMod;
-	}
-	return $healthMod;
-}
-
-function getAgeModAI($userID)
-{
-	$sqlVar = "SELECT age FROM userInfo WHERE userID='" . $userID . "'";
-	$result2 = DB::select($sqlVar);
-	foreach($result2 as $row)
-	{
-		$resultVar = $row->age;
-	}
-	$sqlAge = "SELECT max(age) FROM age WHERE age<='" . $resultVar . "'";
-	$result = DB::select($sqlAge);
-	foreach($result as $row)
-	{
-		//echo $row . "<br><br>";
-		$age = $row->{'max(age)'};
-	}
-	$sqlMod = "SELECT carMod FROM age WHERE age='" . $age . "'";
-	$resultMod = DB::select($sqlMod);
-	foreach($resultMod as $row)
-	{
-		$healthMod = $row->carMod;
-	}
-	return $healthMod;
-}
-
-function getInfoColumns()
-{
-	$columns = array();
-	$sql2 = "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='myhome' AND `TABLE_NAME`='userInfo'";
-	$result2 = DB::select($sql2);
-	foreach($result2 as $row)
-	{
-		array_push($columns, $row->COLUMN_NAME);
-	}
-	return $columns;
-}
-
-function getServiceColumns($vendtype)
-{
-	$columns = array();
-	$sql2 = "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='myhome' AND `TABLE_NAME`='$vendtype'";
-	$result2 = DB::select($sql2);
-	foreach($result2 as $row)
-	{
-		array_push($columns, $row->COLUMN_NAME);
-	}
-	return $columns;
-}
-
-function getUserID()
-	{
-		$sqlID = "SELECT userID FROM users WHERE firstname='" . session('firstname') . "'";
-		$resultID = DB::select($sqlID);
-		foreach($resultID as $row)
-		{
-			//echo $row->userID . "<br>";
-			$userID = $row->userID;
-		} 
-		return $userID;
-	}
-
-
-function getVendType()
-{
-	if(isset($_GET['searchFor']))
-	{
-		$searchFor = $_GET['searchFor'];
-		if($searchFor=='CS')
-		{
-			return 'cell_services';
+		if ($deadGrass == 'No'){
+			$sugPrice = 0.03 * $lawnFootage;
 		}
-		if($searchFor=='IS')
-		{
-			return 'internet_services';
-		}
-		if($searchFor=='HI')
-		{
-			return 'health_insurance';
-		}
-		if($searchFor=='AI')
-		{
-			return 'auto';
+		else{
+			$sugPrice = 0.06 * $lawnFootage;
 		}
 	}
-	return 'cell_services';
+	else
+	{
+		if($aerate == 'Yes')
+		{
+			$priceMod = priceMod + 0.05;
+			$needAerate = 'Yes';
+		}
+		if($weeded == 'Yes')
+		{
+			$priceMod = priceMod + 0.02;
+			$needWeed = 'Yes';
+		}
+		if($pool == 'Yes')
+		{
+			$priceMod = priceMod + 0.03;
+			$needCleanPool = 'Yes';
+		}	
+		if($pests == 'Yes')
+		{
+			$priceMod = priceMod + 0.06;
+			$needPestsGone = 'Yes';
+		}
+		if ($deadGrass == 'No'){
+			$priceMod = priceMod + 0.03;
+		}
+		else{
+			$priceMod = priceMod + 0.06;
+		}
+		$sugPrice=((lawnFootage * $priceMod));
+	}
+
+	$table = getVendType();
+	$serviceColumns = getServiceColumns(getVendType());
+	$max_index = count($serviceColumns);
+
+
+	$willAerate = $serviceColumns[4];
+	$willWeed = $serviceColumns[5];
+	$willCleanPool = $serviceColumns[6];
+	$willKillPests = $serviceColumns[7];
+	$price = $serviceColumns[8];
+	$provider = $serviceColumns[2];
+
+
+
+	echo "<p style = 'font-size: 16px'> Recommended Values Based on Your Lawn: Price <= $$sugPrice<br>Provides Aeration: $needAerate<br>Provides Weeding: $needWeed<br>Pool Cleainng: $needCleanPool<br>Pest Control: $needPestsGone";
+	$sqlRec = "SELECT * FROM $table WHERE willAerate = '" . $needAerate ."' AND willWeed = '" . $needWeed ."' AND willCleanPool = '" . $needCleanPool ."' AND willKillPests = '" . $needPestsGone ."' AND price <= '" . $sugPrice . "'";
+
+	$resultRec = DB::select($sqlRec);
+	echo "<table border='2'  margin-left='1px 1px' align=center style='padding-right:20px; border-style:solid; font-size:13px;'>";
+	echo "<p style = 'font-size: 16px'> Plans Matching Recommended Values: </p>";
+	echo "<tr> <th style='padding:5px'>ID</th><th style='padding:5px'>Type</th><th style='padding:5px'>Aeration</th><th style='padding:5px'>Weeding</th><th style='padding:5px'>Pool Cleaning</th><th style='padding:5px'>Pest Control</th></th><th style='padding:5px'>Price</th></tr>";
+	foreach($resultRec as $row)
+	{
+		echo "<tr>";
+		for ($i=0; $i < $max_index - 1; $i++)
+		{
+			if($i != 3 && $i !=1)
+			{
+				echo "<td>";
+				$temp = $serviceColumns[$i];
+				echo $row->$temp . " ";
+				echo "</td>";
+			}
+		}
+	} 
+		echo "</tr>";
+	//}
+	echo "</table>";
+	echo  '<form name="serviceForm" method="post">';
+	?>
+		@csrf
+	<?php 
+	echo '<label for="serviceIDLabel">Enter Service ID to add:</label><br>
+	<input type="text" id="serviceInput" name="fname"><br>
+	<input type="submit" value="Submit" name="serviceInput">
+  </form> ';
 }
+
 
 function addService($serviceID)
 	{
@@ -519,16 +636,16 @@ function getServiceIDName($vendType)
     	case 'home_insurance':
        	 	return 'hoiID';
 		break;
-	case 'auto':
+		case 'auto':
        	 	return 'aiID';
 		break;
-	case 'internet_services':
+		case 'internet_services':
        	 	return 'isID';
 		break;
-	case 'lawncare':
+		case 'lawncare':
        	 	return 'lcID';
 		break;
-	case 'housekeeping':
+		case 'housekeeping':
        	 	return 'hsID';
 		break;
 	}
@@ -672,6 +789,10 @@ else
    			}	
 			$columns = array();
 			$columnsName = array();
+
+
+
+			//----------- Remove later
 			$sql2 = "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA`='myhome' AND `TABLE_NAME`='services'";
 			$result2 = DB::select($sql2);
 			foreach($result2 as $row)
@@ -680,6 +801,10 @@ else
 				
 			}
 			$sqlRec = "SELECT * FROM services WHERE userID >= " . getUserID() . "";
+			//----------- Remove Later
+
+
+
 			$resultRec = DB::select($sqlRec);
 			$vendType = getVendType();
 			$vendBiz = getServiceIDName($vendType);
@@ -751,9 +876,21 @@ else
 				{
 					displayFunctionHI();
 				}
+				if($searchFor=='HOI')
+				{
+					displayFunctionHOI();
+				}
 				if($searchFor=='AI')
 				{
 					displayFunctionAI();
+				}
+				if($searchFor=='LC')
+				{
+					displayFunctionLC();
+				}
+				if($searchFor=='HS')
+				{
+					displayFunctionHS();
 				}
 			}
 		

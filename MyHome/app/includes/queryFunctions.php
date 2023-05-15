@@ -28,6 +28,23 @@ function getStateModHI($userID)
 	return $healthPrice;
 }
 
+function getStateModHOI($userID)
+{
+	$sqlVar = "SELECT state FROM userInfo WHERE userID='" . $userID . "'";
+	$result2 = DB::select($sqlVar);
+	foreach($result2 as $row)
+	{
+		$resultVar = $row->state;
+	}
+	$sqlMod = "SELECT home_owners FROM states WHERE state='" . $resultVar . "'";
+	$resultMod = DB::select($sqlMod);
+	foreach($resultMod as $row)
+	{
+		$healthPrice = $row->home_owners;
+	}
+	return $healthPrice;
+}
+
 function getStateFullAI($userID)
 {
 	$sqlVar = "SELECT state FROM userInfo WHERE userID='" . $userID . "'";
@@ -188,6 +205,18 @@ function getVendType()
 		if($searchFor=='AI')
 		{
 			return 'auto';
+		}
+		if($searchFor=='HOI')
+		{
+			return 'home_insurance';
+		}
+		if($searchFor=='LC')
+		{
+			return 'lawncare';
+		}
+		if($searchFor=='HS')
+		{
+			return 'housekeeping';
 		}
 	}
 	return 'cell_services';
